@@ -1,0 +1,46 @@
+version: "3.9"
+
+services:
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    ports:
+      - "8000:8000"
+    environment:
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
+      - SIFT_HOST=${SIFT_HOST}
+      - SIFT_PORT=${SIFT_PORT:-22}
+      - SIFT_USER=${SIFT_USER:-sansforensics}
+      - SIFT_SSH_KEY_PATH=/app/.ssh/sift_id_rsa
+      - FORENSICIQ_HOST=0.0.0.0
+      - FORENSICIQ_PORT=8000
+      - CORS_ORIGINS=http://localhost:3000
+      - CLAUDE_MODEL=${CLAUDE_MODEL:-claude-sonnet-4-6}
+      - MAX_CORRECTION_ITERATIONS=${MAX_CORRECTION_ITERATIONS:-3}
+      - CONFIDENCE_CORRECTION_THRESHOLD=${CONFIDENCE_CORRECTION_THRESHOLD:-0.70}
+    volumes:
+      - ~/.ssh/sift_id_rsa:/app/.ssh/sift_id_rsa:ro
+      - ./backend/reports:/app/reports
+    networks:
+      - forensiciq-net
+    restart: unless-stopped
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3000"
+    environment:
+      - NEXT_PUBLIC_API_URL=http://localhost:8000
+      - NEXT_PUBLIC_WS_URL=ws://localhost:8000
+    depends_on:
+      - backend
+    networks:
+      - forensiciq-net
+    restart: unless-stopped
+
+networks:
+  forensiciq-net:
+    driver: bridge
