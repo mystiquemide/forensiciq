@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>ForensIQ Report — {{ investigation_id[:8] }}</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: #0a0e1a; color: #e8edf7; font-family: 'Inter', system-ui, sans-serif; padding: 40px; }
+  h1 { font-size: 28px; font-weight: 600; color: #00d4b8; margin-bottom: 4px; }
+  .meta { font-size: 13px; color: #7a8db0; margin-bottom: 32px; }
+  h2 { font-size: 18px; font-weight: 600; margin: 32px 0 16px; padding-bottom: 8px; border-bottom: 1px solid #1e2d4d; }
+  .summary { display: flex; gap: 24px; margin-bottom: 32px; }
+  .stat { background: #0f1629; border: 1px solid #1e2d4d; border-radius: 8px; padding: 16px 24px; flex: 1; }
+  .stat .count { font-size: 36px; font-weight: 700; }
+  .stat .label { font-size: 12px; color: #7a8db0; text-transform: uppercase; letter-spacing: 0.08em; margin-top: 4px; }
+  .fact .count { color: #10d98a; }
+  .inference .count { color: #f0a832; }
+  .hypothesis .count { color: #f05060; }
+  .finding { background: #0f1629; border: 1px solid #1e2d4d; border-radius: 8px; padding: 16px; margin-bottom: 12px; }
+  .finding-header { display: flex; align-items: center; gap: 12px; margin-bottom: 8px; }
+  .badge { font-size: 11px; font-weight: 500; letter-spacing: 0.08em; padding: 2px 8px; border-radius: 4px; font-family: 'JetBrains Mono', monospace; }
+  .badge-FACT { background: #10d98a22; color: #10d98a; border: 1px solid #10d98a44; }
+  .badge-INFERENCE { background: #f0a83222; color: #f0a832; border: 1px solid #f0a83244; }
+  .badge-HYPOTHESIS { background: #f0506022; color: #f05060; border: 1px solid #f0506044; }
+  .confidence { font-size: 13px; color: #7a8db0; }
+  .sources { font-size: 12px; color: #4a5878; margin-top: 6px; font-family: monospace; }
+  .description { font-size: 14px; line-height: 1.6; color: #c8d0e0; }
+  .artifact { font-size: 12px; color: #4a5878; margin-top: 4px; font-family: monospace; }
+  .hash { font-size: 11px; color: #3a4868; font-family: monospace; margin-top: 4px; word-break: break-all; }
+  .tool-call { background: #0f1629; border: 1px solid #1e2d4d; border-radius: 6px; padding: 12px; margin-bottom: 8px; font-family: monospace; font-size: 12px; }
+  .tool-name { color: #00d4b8; }
+  .tool-time { color: #7a8db0; float: right; }
+  .tool-hash { color: #3a4868; margin-top: 4px; word-break: break-all; }
+  .empty { color: #4a5878; font-style: italic; padding: 16px 0; }
+</style>
+</head>
+<body>
+  <h1>ForensIQ Investigation Report</h1>
+  <div class="meta">
+    Case: {{ case_path }} &nbsp;·&nbsp;
+    ID: {{ investigation_id }} &nbsp;·&nbsp;
+    Generated: {{ generated_at }}
+  </div>
+
+  <div class="summary">
+    <div class="stat fact">
+      <div class="count">{{ summary.facts }}</div>
+      <div class="label">Facts</div>
+    </div>
+    <div class="stat inference">
+      <div class="count">{{ summary.inferences }}</div>
+      <div class="label">Inferences</div>
+    </div>
+    <div class="stat hypothesis">
+      <div class="count">{{ summary.hypotheses }}</div>
+      <div class="label">Hypotheses</div>
+    </div>
+  </div>
+
+  <h2>FACTS — High Confidence (≥85%, 3+ tools)</h2>
+  {% for f in facts %}
+  <div class="finding">
+    <div class="finding-header">
+      <span class="badge badge-FACT">FACT</span>
+      <span class="confidence">{{ "%.0f"|format(f.confidence * 100) }}% confidence</span>
+    </div>
+    <div class="description">{{ f.description }}</div>
+    {% if f.artifact_ref %}<div class="artifact">Artifact: {{ f.artifact_ref }}</div>{% endif %}
+    <div class="sources">Sources: {{ f.sources | join(", ") }}{% if f.contradictions %} · Contradictions: {{ f.contradictions | join(", ") }}{% endif %}</div>
+    <div class="hash">SHA-256: {{ f.evidence_hash }}</div>
+  </div>
+  {% else %}<div class="empty">No confirmed facts yet.</div>
+  {% endfor %}
+
+  <h2>INFERENCES — Medium Confidence (50–84%)</h2>
+  {% for f in inferences %}
+  <div class="finding">
+    <div class="finding-header">
+      <span class="badge badge-INFERENCE">INFERENCE</span>
+      <span class="confidence">{{ "%.0f"|format(f.confidence * 100) }}% confidence</span>
+    </div>
+    <div class="description">{{ f.description }}</div>
+    {% if f.artifact_ref %}<div class="artifact">Artifact: {{ f.artifact_ref }}</div>{% endif %}
+    <div class="sources">Sources: {{ f.sources | join(", ") }}</div>
+    <div class="hash">SHA-256: {{ f.evidence_hash }}</div>
+  </div>
+  {% else %}<div class="empty">No inferences.</div>
+  {% endfor %}
+
+  <h2>HYPOTHESES — Needs Review (&lt;50%)</h2>
+  {% for f in hypotheses %}
+  <div class="finding">
+    <div class="finding-header">
+      <span class="badge badge-HYPOTHESIS">HYPOTHESIS</span>
+      <span class="confidence">{{ "%.0f"|format(f.confidence * 100) }}% confidence — human review required</span>
+    </div>
+    <div class="description">{{ f.description }}</div>
+    {% if f.artifact_ref %}<div class="artifact">Artifact: {{ f.artifact_ref }}</div>{% endif %}
+    <div class="sources">Sources: {{ f.sources | join(", ") }}</div>
+    <div class="hash">SHA-256: {{ f.evidence_hash }}</div>
+  </div>
+  {% else %}<div class="empty">No open hypotheses.</div>
+  {% endfor %}
+
+  <h2>Cryptographic Audit Trail</h2>
+  {% for t in tool_calls %}
+  <div class="tool-call">
+    <span class="tool-name">{{ t.tool_name }}</span>
+    <span class="tool-time">{{ t.timestamp }} · {{ t.duration_ms }}ms · {% if t.success %}✓{% else %}✗{% endif %}</span>
+    <div class="tool-hash">SHA-256(output): {{ t.output_hash }}</div>
+  </div>
+  {% else %}<div class="empty">No tool calls recorded.</div>
+  {% endfor %}
+</body>
+</html>

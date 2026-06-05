@@ -1,0 +1,41 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+.venv/
+venv/
+env/
+*.egg-info/
+dist/
+.mypy_cache/
+.ruff_cache/
+
+# Environment
+.env
+.env.local
+*.env.local
+backend/.env
+frontend/.env.local
+
+# Next.js
+frontend/.next/
+frontend/out/
+frontend/node_modules/
+frontend/.vercel
+
+# Reports / outputs
+backend/reports/
+backend/logs/
+*.log
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/settings.json
+.idea/
+
+# Case data (never commit)
+backend/case_data/
+backend/evidence/
