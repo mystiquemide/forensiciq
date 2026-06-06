@@ -6,7 +6,6 @@ execution it updates the EvidenceGraph and triggers self-correction when
 any finding sits below the confidence threshold.
 """
 
-import json
 from collections.abc import Callable, Awaitable
 from typing import Any
 
