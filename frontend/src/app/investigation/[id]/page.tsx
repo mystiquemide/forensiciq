@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState, useCallback } from "react";
+import { use, useEffect, useRef, useState, useCallback } from "react";
 import Link from "next/link";
 import dynamic from "next/dynamic";
 import { FileDown, Wifi, WifiOff, Loader, Volume2, VolumeX, RefreshCw, AlertTriangle, CheckCircle2, Network, Clock } from "lucide-react";
@@ -47,11 +47,11 @@ function WsIndicator({ status, onReconnect }: { status: WSStatus; onReconnect: (
 }
 
 interface Props {
-  params: { id: string };
+  params: Promise<{ id: string }>;
 }
 
 export default function InvestigationPage({ params }: Props) {
-  const { id } = params;
+  const { id } = use(params);
   const { state, handleEvent, dispatch } = useInvestigation();
   const { wsStatus, reconnect } = useWebSocket(id, handleEvent);
   const { muted, toggleMute, playFactPing, playToolStart } = useSound();
