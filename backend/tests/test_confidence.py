@@ -66,7 +66,7 @@ def test_summary_counts():
     graph.corroborate(f1.id, tool_name="volatility.malfind", raw_output="data2")
     graph.corroborate(f1.id, tool_name="volatility.cmdline", raw_output="data3")
 
-    f2 = graph.add_finding("Finding 2", tool_name="regripper", raw_output="run key data")
+    graph.add_finding("Finding 2", tool_name="regripper", raw_output="run key data")
 
     f3 = graph.add_finding("Finding 3", tool_name="strings_tool", raw_output="suspicious string")
     graph.contradict(f3.id, tool_name="file_identify")
