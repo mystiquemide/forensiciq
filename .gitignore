@@ -39,3 +39,20 @@ Thumbs.db
 # Case data (never commit)
 backend/case_data/
 backend/evidence/
+
+# Claude Code project settings
+.claude/
+
+# Project memory (shared out-of-band)
+memory.md
+
+# TypeScript build cache
+frontend/tsconfig.tsbuildinfo
+
+# Test coverage
+coverage/
+.coverage
+htmlcov/
+
+# Playwright temp installs
+node_modules/

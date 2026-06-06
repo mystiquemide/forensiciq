@@ -12,12 +12,14 @@ import type {
 type Action =
   | { type: "SET_ID"; id: string }
   | { type: "SET_STATUS"; status: InvestigationState["status"] }
-  | { type: "TOOL_START"; tool: string }
+  | { type: "TOOL_START"; tool: string; note?: string }
   | { type: "TOOL_COMPLETE"; tool: string; duration_ms: number; output_hash?: string }
   | { type: "TOOL_ERROR"; tool: string; error: string }
   | { type: "FINDING_NEW"; finding: Finding }
   | { type: "FINDING_UPDATED"; finding: Finding }
   | { type: "SELF_CORRECTION"; finding_id: string; reason: string }
+  | { type: "CORRECTION_COMPLETE" }
+  | { type: "SET_ERROR"; message: string }
   | { type: "COMPLETE"; summary: InvestigationSummary };
 
 const initial: InvestigationState = {
@@ -26,6 +28,8 @@ const initial: InvestigationState = {
   findings: [],
   toolLog: [],
   summary: null,
+  correctionPass: 0,
+  errorMessage: null,
 };
 
 function logId() {
@@ -43,7 +47,7 @@ function reducer(state: InvestigationState, action: Action): InvestigationState 
         ...state,
         toolLog: [
           ...state.toolLog,
-          { id: logId(), tool: action.tool, timestamp: Date.now(), status: "running" },
+          { id: logId(), tool: action.tool, timestamp: Date.now(), status: "running", note: action.note },
         ],
       };
     case "TOOL_COMPLETE": {
@@ -82,8 +86,12 @@ function reducer(state: InvestigationState, action: Action): InvestigationState 
           note: action.reason,
         },
       ];
-      return { ...state, toolLog: log };
+      return { ...state, status: "correcting", correctionPass: state.correctionPass + 1, toolLog: log };
     }
+    case "CORRECTION_COMPLETE":
+      return { ...state, status: "running" };
+    case "SET_ERROR":
+      return { ...state, status: "error", errorMessage: action.message };
     case "COMPLETE":
       return { ...state, status: "complete", summary: action.summary };
     default:
@@ -97,7 +105,7 @@ export function useInvestigation() {
   const handleEvent = useCallback((event: WSEvent) => {
     switch (event.type) {
       case "tool_start":
-        dispatch({ type: "TOOL_START", tool: event.tool });
+        dispatch({ type: "TOOL_START", tool: event.tool, note: event.reasoning });
         break;
       case "tool_complete":
         dispatch({ type: "TOOL_COMPLETE", tool: event.tool, duration_ms: event.duration_ms, output_hash: event.output_hash });
@@ -113,6 +121,12 @@ export function useInvestigation() {
         break;
       case "self_correction":
         dispatch({ type: "SELF_CORRECTION", finding_id: event.finding_id, reason: event.reason });
+        break;
+      case "iteration_complete":
+        dispatch({ type: "CORRECTION_COMPLETE" });
+        break;
+      case "error":
+        dispatch({ type: "SET_ERROR", message: event.message });
         break;
       case "investigation_complete":
         dispatch({ type: "COMPLETE", summary: event.summary });

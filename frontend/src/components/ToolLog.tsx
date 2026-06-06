@@ -1,62 +1,87 @@
 "use client";
 
 import { useEffect, useRef } from "react";
+import { CheckCircle2, XCircle, Loader, RefreshCw } from "lucide-react";
 import type { ToolLogEntry } from "@/types";
+
+function fmt(ts: number) {
+  return new Date(ts).toLocaleTimeString("en-US", { hour12: false, hour: "2-digit", minute: "2-digit", second: "2-digit" });
+}
+
+function fmtDuration(ms: number) {
+  return ms >= 1000 ? `${(ms / 1000).toFixed(1)}s` : `${ms}ms`;
+}
+
+function matches(tool: string, highlighted: string) {
+  return tool === highlighted || highlighted.startsWith(tool) || tool.startsWith(highlighted);
+}
 
 interface Props {
   entries: ToolLogEntry[];
+  highlightedTool?: string | null;
 }
 
-const STATUS_COLOR: Record<ToolLogEntry["status"], string> = {
-  running: "text-teal",
-  complete: "text-fact",
-  error: "text-hypothesis",
-};
-
-const STATUS_ICON: Record<ToolLogEntry["status"], string> = {
-  running: "▶",
-  complete: "✓",
-  error: "✗",
-};
-
-export default function ToolLog({ entries }: Props) {
+export default function ToolLog({ entries, highlightedTool }: Props) {
   const bottomRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [entries.length]);
 
+  if (entries.length === 0) {
+    return (
+      <div className="h-full flex items-start px-4 pt-4">
+        <span className="text-teal opacity-40 font-mono text-xs mr-2">&gt;_</span>
+        <span className="text-text-muted font-mono text-xs">waiting for agent to start...</span>
+      </div>
+    );
+  }
+
   return (
-    <div className="h-full overflow-y-auto bg-bg-2 rounded-lg border border-border p-3 font-mono text-xs">
-      {entries.length === 0 && (
-        <p className="text-text-muted italic">Waiting for investigation to start...</p>
-      )}
-      {entries.map((entry) => (
-        <div key={entry.id} className="mb-2 last:mb-0">
-          <div className="flex items-start gap-2">
-            <span className={`${STATUS_COLOR[entry.status]} shrink-0 mt-0.5`}>
-              {STATUS_ICON[entry.status]}
-            </span>
-            <div className="flex-1 min-w-0">
-              <span className="text-teal">{entry.tool}</span>
-              {entry.duration_ms !== undefined && (
-                <span className="text-text-muted ml-2">{entry.duration_ms}ms</span>
-              )}
-              <span className="text-text-muted ml-2">
-                {new Date(entry.timestamp).toLocaleTimeString()}
+    <div className="h-full overflow-y-auto px-3 py-3 font-mono text-xs space-y-2">
+      {entries.map((e) => {
+        const lit = highlightedTool ? matches(e.tool, highlightedTool) : false;
+        const isSelfCorrection = e.tool === "self-correction";
+        return (
+          <div
+            key={e.id}
+            className={`rounded-lg p-2.5 border transition-all duration-200 ${
+              lit
+                ? "bg-teal/8 border-teal/40 shadow-[0_0_8px_rgba(0,212,184,0.1)]"
+                : "bg-bg-1 border-border"
+            }`}
+          >
+            <div className="flex items-center gap-2">
+              {e.status === "running"  && !isSelfCorrection && <Loader    size={10} className="text-inference animate-spin shrink-0" />}
+              {e.status === "complete" && !isSelfCorrection && <CheckCircle2 size={10} className="text-fact shrink-0" />}
+              {e.status === "error"                          && <XCircle  size={10} className="text-hypothesis shrink-0" />}
+              {isSelfCorrection                              && <RefreshCw size={10} className="text-inference shrink-0" />}
+              <span className={`flex-1 truncate ${
+                e.status === "error"   ? "text-hypothesis"
+                : isSelfCorrection     ? "text-inference"
+                : lit                  ? "text-teal"
+                : "text-text-primary"
+              }`}>
+                {e.tool}
               </span>
-              {entry.note && (
-                <div className="text-inference mt-0.5">⚠ {entry.note}</div>
-              )}
-              {entry.output_hash && (
-                <div className="text-text-muted truncate mt-0.5 text-[10px]">
-                  {entry.output_hash.slice(0, 16)}…
-                </div>
+            </div>
+
+            <div className="flex items-center justify-between mt-1.5 text-[9px] text-text-muted opacity-60">
+              <span>{fmt(e.timestamp)}</span>
+              {e.duration_ms !== undefined && (
+                <span className="text-fact opacity-100">{fmtDuration(e.duration_ms)}</span>
               )}
             </div>
+
+            {e.note && (
+              <p className="mt-1.5 text-[9px] text-text-muted leading-relaxed opacity-70">{e.note}</p>
+            )}
+            {e.output_hash && (
+              <p className="mt-1 text-[9px] text-text-muted opacity-25 truncate">{e.output_hash}</p>
+            )}
           </div>
-        </div>
-      ))}
+        );
+      })}
       <div ref={bottomRef} />
     </div>
   );

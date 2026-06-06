@@ -38,15 +38,23 @@ const config: Config = {
         },
       },
       fontFamily: {
-        sans: ["var(--font-inter)", "system-ui", "sans-serif"],
-        mono: ["var(--font-jetbrains)", "Fira Code", "monospace"],
-        display: ["var(--font-space)", "system-ui", "sans-serif"],
+        sans: ["Inter", "system-ui", "sans-serif"],
+        mono: ["JetBrains Mono", "Fira Code", "monospace"],
+        display: ["Space Grotesk", "system-ui", "sans-serif"],
       },
       animation: {
-        "spin-slow": "spin 3s linear infinite",
+        "slide-up": "slide-up 0.55s cubic-bezier(0.16,1,0.3,1) both",
+        "spin-slow": "spin 20s linear infinite",
+        "spin-slow-reverse": "spin-reverse 25s linear infinite",
+        "radar": "radar-sweep 5s linear infinite",
         "pulse-teal": "pulse-teal 2s ease-in-out infinite",
+        "float-chip": "float-chip 3s ease-in-out infinite",
       },
       keyframes: {
+        "slide-up": {
+          from: { opacity: "0", transform: "translateY(28px)" },
+          to: { opacity: "1", transform: "translateY(0)" },
+        },
         "pulse-teal": {
           "0%, 100%": { opacity: "1" },
           "50%": { opacity: "0.4" },
