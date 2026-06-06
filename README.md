@@ -1,21 +1,36 @@
+<!-- ForensIQ is built by MystiqueMide and Kingnanaweb3 for hackathon submission review. -->
+
 # ForensIQ
 
 **Facts, not guesses. Evidence, not vibes.**
 
-The only DFIR agent that labels every finding FACT, INFERENCE, or HYPOTHESIS using deterministic multi-tool confidence scoring, a cryptographic audit trail, and a self-correction loop. Built for the [SANS Find Evil! Hackathon](https://findevil.devpost.com), June 2026.
+ForensIQ is a confidence-calibrated DFIR agent that labels every finding as **FACT**, **INFERENCE**, or **HYPOTHESIS** using deterministic multi-tool evidence scoring, cryptographic output hashes, and a self-correction loop. Built for the [SANS Find Evil! Hackathon](https://findevil.devpost.com), June 2026.
 
 [![MIT License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 [![CI](https://github.com/mystiquemide/forensiciq/actions/workflows/ci.yml/badge.svg)](https://github.com/mystiquemide/forensiciq/actions/workflows/ci.yml)
-[![Next.js 14](https://img.shields.io/badge/Next.js-14-black?logo=next.js&logoColor=white)](https://nextjs.org)
+[![Next.js 16](https://img.shields.io/badge/Next.js-16-black?logo=next.js&logoColor=white)](https://nextjs.org)
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.111-009688?logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com)
 [![Python 3.11](https://img.shields.io/badge/python-3.11-3776AB?logo=python&logoColor=white)](https://python.org)
 [![TypeScript](https://img.shields.io/badge/TypeScript-strict-3178C6?logo=typescript&logoColor=white)](https://typescriptlang.org)
 
----
+Most DFIR tools return a flat list of findings and leave the analyst to guess which ones are solid. ForensIQ makes the evidentiary weight explicit. Every finding carries a deterministic confidence tier backed by corroborating tool output, contradictions, and a hashable audit trail.
 
-Every other DFIR tool gives you a flat list of findings. ForensIQ gives you FACT, INFERENCE, or HYPOTHESIS on every finding, derived from deterministic multi-tool corroboration scoring, not LLM confidence. An analyst reviewing the report knows the exact evidentiary weight behind each finding before acting.
+## Product Screens
 
----
+### Landing page
+![ForensIQ landing page](docs/assets/product-screens/landing.png)
+
+### Investigation dashboard
+![ForensIQ investigation dashboard](docs/assets/product-screens/dashboard.png)
+
+## Why this exists
+
+Incident responders need speed, but blind automation can be dangerous. ForensIQ keeps the agent useful without pretending every output is equally true. It separates confirmed facts from lower-confidence hypotheses so a reviewer can act quickly without losing chain-of-custody discipline.
+
+## Team
+
+- **MystiqueMide** - Frontend, product direction, repo polish, demo flow, submission
+- **Kingnanaweb3** - Backend, API, Splunk integration
 
 ## Confidence Tiers
 
@@ -25,49 +40,34 @@ Every other DFIR tool gives you a flat list of findings. ForensIQ gives you FACT
 | **INFERENCE** | >= 50% confidence, 1-2 sources | Corroborated but not fully confirmed. Review before acting. |
 | **HYPOTHESIS** | < 50% confidence | Single source, low confidence. Do not rely on this finding. |
 
-The math is deterministic: base 0.50, +0.20 per corroborating tool (capped at 0.95), -0.25 per contradiction (floored at 0.10). No black-box LLM confidence numbers.
-
----
-
-## Product Screens
-
-### Landing page
-![ForensIQ landing page](docs/assets/screenshots/landing.png)
-
-### Investigation dashboard
-![ForensIQ investigation dashboard](docs/assets/screenshots/dashboard.png)
-
----
+The scoring is deterministic: base `0.50`, `+0.20` per corroborating tool capped at `0.95`, and `-0.25` per contradiction floored at `0.10`. No black-box LLM confidence numbers.
 
 ## Features
 
-- **Calibrated Confidence Scoring** - Every finding starts at 50% and adjusts deterministically. Each corroborating tool adds 20%, each contradiction removes 25%. No hallucinated confidence scores.
-- **Live Evidence Graph** - Findings render as nodes in a React Flow graph, colored by confidence tier in real time. Edges connect findings that share corroborating sources.
-- **8 SIFT Tool Wrappers** - Volatility, RegRipper, log2timeline, YARA, Sleuth Kit, strings, file identification, and hash computation all run autonomously over SSH.
-- **Self-Correction Loop** - After each tool run, the agent reviews findings below 70% confidence and selects the best corroborating tool to re-run. Up to 3 correction passes per investigation.
-- **Cryptographic Audit Trail** - Every tool call produces a SHA-256 hash of its raw output. Every finding links back to the exact tool output that created it. Fully verifiable chain of custody.
-- **Structured HTML Report** - One click exports a complete report with FACT, INFERENCE, and HYPOTHESIS sections plus the full audit trail. Ready for incident review or court submission.
-
----
+- **Calibrated Confidence Scoring** - Every finding starts at 50% and adjusts through deterministic corroboration and contradiction rules.
+- **Live Evidence Graph** - Findings render as nodes in a React Flow graph, colored by confidence tier in real time.
+- **8 SIFT Tool Wrappers** - Volatility, RegRipper, log2timeline, YARA, Sleuth Kit, strings, file identification, and hash computation.
+- **Self-Correction Loop** - Findings below the confidence threshold trigger targeted corroboration attempts.
+- **Cryptographic Audit Trail** - Every tool call records a SHA-256 hash of raw output for verifiable review.
+- **Structured HTML Report** - Exports FACT, INFERENCE, and HYPOTHESIS sections with the full audit trail.
 
 ## Architecture
 
-```
-Web UI (Next.js 14 + React Flow + WebSocket)
+```text
+Web UI (Next.js 16 + React Flow + WebSocket)
            REST + WebSocket
-FastAPI backend + Claude agent (tool_use loop)
-           asyncssh (read-only credentials)
+FastAPI backend + Claude agent tool loop
+           asyncssh with read-only credentials
 SIFT Workstation VM (Ubuntu)
 ```
 
-- **Agent layer** (`backend/forensiciq/agent.py`): drives the Claude tool_use loop and manages self-correction iterations
-- **Confidence engine** (`backend/forensiciq/evidence_graph.py`): deterministic math, not LLM-generated scores
-- **Tool layer** (`backend/forensiciq/tools/`): 8 asyncssh wrappers, each with a security blocklist enforced before SSH connects
-- **Frontend** (`frontend/`): Next.js 14, WebSocket hook with auto-reconnect, React Flow evidence graph
+- **Agent layer** (`backend/forensiciq/agent.py`) drives investigation and self-correction passes.
+- **Confidence engine** (`backend/forensiciq/evidence_graph.py`) handles deterministic scoring and summary counts.
+- **Tool layer** (`backend/forensiciq/tools/`) wraps SIFT/DFIR tools behind a security blocklist.
+- **API layer** (`backend/forensiciq/api/`) exposes REST endpoints and investigation WebSocket events.
+- **Frontend** (`frontend/`) provides the launch page, investigation dashboard, product screens, and live graph UI.
 
 Full detail in [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
-
----
 
 ## Quick Start
 
@@ -77,13 +77,13 @@ Full detail in [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
 - SIFT Workstation VM reachable over SSH
 - Anthropic API key
 
-### Docker Compose (recommended)
+### Docker Compose, recommended
 
 ```bash
 git clone https://github.com/mystiquemide/forensiciq.git
 cd forensiciq
 cp .env.example .env
-# Edit .env: set ANTHROPIC_API_KEY, SIFT_HOST, SIFT_USER, SIFT_SSH_KEY_PATH
+# Edit .env with ANTHROPIC_API_KEY, SIFT_HOST, SIFT_USER, and SIFT_SSH_KEY_PATH
 docker compose up --build
 ```
 
@@ -95,11 +95,13 @@ Backend API docs: `http://localhost:8000/docs`
 ```bash
 # Backend
 cd backend
+python -m venv .venv
+source .venv/bin/activate
 pip install -e ".[dev]"
 cp .env.example .env
 uvicorn main:app --reload --port 8000
 
-# Frontend (separate terminal)
+# Frontend, separate terminal
 cd frontend
 npm install
 cp .env.local.example .env.local
@@ -108,29 +110,51 @@ npm run dev
 
 Frontend dev server: `http://localhost:3001`
 
----
-
 ## Environment Variables
 
 | Variable | Required | Description |
-|---|---|---|
-| `ANTHROPIC_API_KEY` | Yes | Anthropic API key for Claude |
+|---|---:|---|
+| `ANTHROPIC_API_KEY` | Yes | Anthropic API key for the agent runtime |
 | `SIFT_HOST` | Yes | IP or hostname of the SIFT VM |
-| `SIFT_PORT` | No | SSH port (default: 22) |
+| `SIFT_PORT` | No | SSH port, default `22` |
 | `SIFT_USER` | Yes | SSH username on the SIFT VM |
 | `SIFT_SSH_KEY_PATH` | Yes | Path to the SSH private key |
-| `FORENSICIQ_HOST` | No | Backend bind host (default: 0.0.0.0) |
-| `FORENSICIQ_PORT` | No | Backend port (default: 8000) |
-| `CORS_ORIGINS` | No | Allowed CORS origins |
-| `CLAUDE_MODEL` | No | Claude model ID (default: claude-sonnet-4-6) |
+| `FORENSICIQ_HOST` | No | Backend bind host, default `0.0.0.0` |
+| `FORENSICIQ_PORT` | No | Backend port, default `8000` |
+| `CORS_ORIGINS` | No | Comma-separated allowed frontend origins |
+| `CLAUDE_MODEL` | No | Claude model ID |
 | `MAX_TOKENS` | No | Max tokens per agent call |
-| `MAX_CORRECTION_ITERATIONS` | No | Self-correction passes (default: 3) |
-| `NEXT_PUBLIC_API_URL` | No | Backend URL for frontend (default: http://localhost:8000) |
-| `NEXT_PUBLIC_WS_URL` | No | WebSocket URL for frontend (default: ws://localhost:8000) |
+| `MAX_CORRECTION_ITERATIONS` | No | Self-correction passes |
+| `NEXT_PUBLIC_API_URL` | No | Backend URL for frontend |
+| `NEXT_PUBLIC_WS_URL` | No | WebSocket URL for frontend |
 
-See `.env.example` for a full template.
+Use `.env.example`, `backend/.env.example`, and `frontend/.env.local.example` as safe templates. They contain placeholders only.
 
----
+## API Contract
+
+| Method | Path | Purpose |
+|---|---|---|
+| `GET` | `/api/health` | Backend health check |
+| `POST` | `/api/investigation/start` | Start an investigation for a case path |
+| `GET` | `/api/investigation/{id}` | Fetch investigation state |
+| `GET` | `/api/report/{id}` | Fetch generated HTML report after completion |
+| `WS` | `/api/ws/investigation/{id}` | Stream investigation events to the frontend |
+
+Start request:
+
+```json
+{
+  "case_path": "/cases/test"
+}
+```
+
+Start response:
+
+```json
+{
+  "investigation_id": "uuid"
+}
+```
 
 ## Scripts
 
@@ -145,41 +169,56 @@ npm run typecheck  # tsc --noEmit
 # Backend
 cd backend
 ruff check .       # linting
-mypy forensiciq/   # type checking
 pytest tests/ -v   # tests
 ```
 
----
+## What to test
+
+- Start the backend and confirm `GET http://localhost:8000/api/health` returns `{ "ok": true }`.
+- Start the frontend and confirm the landing page loads at `http://localhost:3001`.
+- Submit or simulate an investigation and confirm the dashboard receives WebSocket events.
+- Confirm the evidence graph separates FACT, INFERENCE, and HYPOTHESIS findings.
+- Confirm report generation works after an investigation completes or errors.
+- Run `npm run lint`, `npm run typecheck`, `npm run build`, `ruff check .`, and `pytest tests/ -v` before submitting.
+
+## Verification Status
+
+Current local verification for this branch:
+
+- Frontend lint: passing
+- Frontend type-check: passing
+- Frontend production build: passing
+- Backend lint/tests: covered by the separate backend CI fix PR
+- Supply-chain IOC scan: no affected package or persistence IOC hits found
 
 ## Repository Layout
 
-```
+```text
 forensiciq/
 ├── backend/
-│   ├── main.py                  FastAPI entry point
+│   ├── main.py
 │   └── forensiciq/
-│       ├── agent.py             Claude tool_use loop + self-correction
-│       ├── evidence_graph.py    Confidence scoring engine
-│       ├── tools/               8 SIFT tool wrappers (asyncssh)
-│       ├── api/                 REST routes + WebSocket manager
-│       └── report/              Jinja2 HTML report generator
+│       ├── agent.py
+│       ├── evidence_graph.py
+│       ├── tools/
+│       ├── api/
+│       └── report/
 ├── frontend/
 │   └── src/
-│       ├── app/                 Landing page, investigation dashboard, investigations list
-│       ├── components/          EvidenceGraph, ToolLog, FindingCard, AuditTimeline, and more
-│       ├── hooks/               useWebSocket, useInvestigation, useSound
-│       └── types/               Shared TypeScript types (WSEvent union, Finding, etc.)
+│       ├── app/
+│       ├── components/
+│       ├── hooks/
+│       └── types/
 ├── docs/
-│   ├── ARCHITECTURE.md          System design, confidence formula, ADRs, security boundaries
-│   ├── DEPLOYMENT.md            Docker, Vercel, SSH setup, troubleshooting
-│   ├── PRD.md                   Product requirements
-│   └── TASKS.md                 Development task breakdown
+│   ├── assets/product-screens/
+│   ├── ARCHITECTURE.md
+│   ├── DEPLOYMENT.md
+│   ├── PRD.md
+│   └── TASKS.md
 ├── docker-compose.yml
-├── AGENTS.md                    Contributor guide and architecture rules
-└── .env.example                 Environment variable template
+├── AGENTS.md
+└── .env.example
 ```
-
----
 
 ## Docs
 
@@ -189,7 +228,9 @@ forensiciq/
 - [Security](SECURITY.md)
 - [Changelog](CHANGELOG.md)
 
----
+## Submission Notes
+
+For hackathon judging, include this repo URL, the demo URL if deployed, product screens, a short demo video, and a short explanation of how the confidence tiers are produced. Make the SIFT VM setup clear if judges need to reproduce the backend locally.
 
 ## License
 
