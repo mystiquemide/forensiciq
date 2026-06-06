@@ -23,7 +23,7 @@ export interface ToolCall {
 
 // WebSocket events
 export type WSEvent =
-  | { type: "tool_start"; tool: string; params: Record<string, unknown> }
+  | { type: "tool_start"; tool: string; params: Record<string, unknown>; reasoning?: string }
   | { type: "tool_complete"; tool: string; finding_ids?: string[]; duration_ms: number; output_hash?: string; success?: boolean }
   | { type: "finding_new"; finding: Finding }
   | { type: "finding_updated"; finding: Finding }
@@ -37,9 +37,10 @@ export interface InvestigationSummary {
   facts: number;
   inferences: number;
   hypotheses: number;
+  narrative?: string;
 }
 
-export type InvestigationStatus = "idle" | "starting" | "running" | "complete" | "error";
+export type InvestigationStatus = "idle" | "starting" | "running" | "correcting" | "complete" | "error";
 
 export interface InvestigationState {
   id: string | null;
@@ -47,6 +48,8 @@ export interface InvestigationState {
   findings: Finding[];
   toolLog: ToolLogEntry[];
   summary: InvestigationSummary | null;
+  correctionPass: number;
+  errorMessage: string | null;
 }
 
 export interface ToolLogEntry {
