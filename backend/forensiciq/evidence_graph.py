@@ -4,6 +4,7 @@ from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from typing import Literal
 
+from forensiciq.artifacts import extract_artifacts, shared_artifacts
 
 ConfidenceLabel = Literal["FACT", "INFERENCE", "HYPOTHESIS"]
 
@@ -36,6 +37,7 @@ class Finding:
     timestamp: str
     artifact_ref: str
     raw_outputs: dict[str, str] = field(default_factory=dict)
+    artifacts: set[str] = field(default_factory=set)
 
     @property
     def label(self) -> ConfidenceLabel:
@@ -52,6 +54,7 @@ class Finding:
             "evidence_hash": self.evidence_hash,
             "timestamp": self.timestamp,
             "artifact_ref": self.artifact_ref,
+            "artifacts": sorted(self.artifacts),
         }
 
 
@@ -102,6 +105,7 @@ class EvidenceGraph:
             timestamp=datetime.now(timezone.utc).isoformat(),
             artifact_ref=artifact_ref,
             raw_outputs={tool_name: raw_output},
+            artifacts=extract_artifacts(raw_output),
         )
         self.findings[finding.id] = finding
         return finding
@@ -111,6 +115,7 @@ class EvidenceGraph:
         if tool_name not in f.sources:
             f.sources.append(tool_name)
             f.raw_outputs[tool_name] = raw_output
+            f.artifacts |= extract_artifacts(raw_output)
             extra_sources = len(f.sources) - 1
             f.confidence = min(_CONFIDENCE_MAX, _CONFIDENCE_BASE + extra_sources * _CONFIDENCE_PER_SOURCE)
         return f
@@ -121,6 +126,22 @@ class EvidenceGraph:
             f.contradictions.append(tool_name)
             f.confidence = max(_CONFIDENCE_FLOOR, f.confidence - _CONFIDENCE_CONTRADICTION_PENALTY)
         return f
+
+    def find_matching_finding(self, raw_output: str, exclude_id: str | None = None) -> Finding | None:
+        """
+        Return an existing finding that shares at least one concrete artifact
+        (IP, PID, hash, path, registry key, domain, executable) with the given
+        raw output. Basis for automatic deterministic corroboration.
+        """
+        incoming = extract_artifacts(raw_output)
+        if not incoming:
+            return None
+        for f in self.findings.values():
+            if f.id == exclude_id:
+                continue
+            if shared_artifacts(incoming, f.artifacts):
+                return f
+        return None
 
     def record_tool_call(
         self,
