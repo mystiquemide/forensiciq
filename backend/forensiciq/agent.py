@@ -1,12 +1,15 @@
 """
-ForensIQ Claude agent.
+ForensIQ Claude / Groq agent.
 
-Drives the investigation loop via Anthropic tool_use. After each tool
-execution it updates the EvidenceGraph and triggers self-correction when
-any finding sits below the confidence threshold.
+Drives the investigation loop via tool_use (Anthropic) or function calling
+(Groq/OpenAI-compatible). Provider is selected via settings.llm_provider.
+After each tool execution the EvidenceGraph is updated and self-correction
+fires when any finding sits below the confidence threshold.
 """
 
+import json
 from collections.abc import Callable, Awaitable
+from dataclasses import dataclass
 from typing import Any
 
 import anthropic
@@ -50,7 +53,7 @@ IP addresses, hashes — anything concrete. Vague findings waste analyst time.
 CONFIDENCE: Do not guess confidence levels — the system calculates this from corroboration.
 Your job is to run tools and report what they found, accurately."""
 
-FINISH_TOOL = {
+FINISH_TOOL_ANTHROPIC = {
     "name": "finish_investigation",
     "description": "Call this when you have completed the investigation. Pass a summary of key findings.",
     "input_schema": {
@@ -65,6 +68,50 @@ FINISH_TOOL = {
     },
 }
 
+FINISH_TOOL_OPENAI = {
+    "type": "function",
+    "function": {
+        "name": "finish_investigation",
+        "description": "Call this when you have completed the investigation. Pass a summary of key findings.",
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "summary": {
+                    "type": "string",
+                    "description": "High-level summary of the investigation findings in 2-3 paragraphs.",
+                }
+            },
+            "required": ["summary"],
+        },
+    },
+}
+
+
+@dataclass
+class NormalizedToolCall:
+    """Provider-agnostic tool call extracted from an LLM response."""
+    id: str
+    name: str
+    input: dict
+
+
+@dataclass
+class NormalizedResponse:
+    tool_calls: list[NormalizedToolCall]
+    stop_early: bool  # True when LLM returned end_turn/stop with no tool calls
+
+
+def _anthropic_def_to_openai(tool_def: dict) -> dict:
+    """Convert an Anthropic tool definition to OpenAI function-calling format."""
+    return {
+        "type": "function",
+        "function": {
+            "name": tool_def["name"],
+            "description": tool_def.get("description", ""),
+            "parameters": tool_def.get("input_schema", {"type": "object", "properties": {}}),
+        },
+    }
+
 
 class ForensIQAgent:
     def __init__(
@@ -76,10 +123,6 @@ class ForensIQAgent:
         self.investigation_id = investigation_id
         self.graph = graph
         self.broadcast = broadcast
-        client_kwargs = {"api_key": settings.anthropic_api_key}
-        if settings.anthropic_base_url:
-            client_kwargs["base_url"] = settings.anthropic_base_url
-        self.client = anthropic.AsyncAnthropic(**client_kwargs)
 
         self._tools: dict[str, BaseSIFTTool] = {
             t.name: t
@@ -94,7 +137,30 @@ class ForensIQAgent:
                 HashComputeTool(),
             ]
         }
-        self._tool_defs = [t.anthropic_tool_definition for t in self._tools.values()] + [FINISH_TOOL]
+
+        # Build tool definitions in both formats once
+        self._anthropic_tool_defs = (
+            [t.anthropic_tool_definition for t in self._tools.values()]
+            + [FINISH_TOOL_ANTHROPIC]
+        )
+        self._openai_tool_defs = (
+            [_anthropic_def_to_openai(t.anthropic_tool_definition) for t in self._tools.values()]
+            + [FINISH_TOOL_OPENAI]
+        )
+
+        # Init the provider client
+        if settings.llm_provider == "groq":
+            from groq import AsyncGroq
+            self._groq = AsyncGroq(api_key=settings.groq_api_key)
+            self._anthropic = None
+            log.info("llm_provider", provider="groq", model=settings.groq_model)
+        else:
+            client_kwargs: dict[str, Any] = {"api_key": settings.anthropic_api_key}
+            if settings.anthropic_base_url:
+                client_kwargs["base_url"] = settings.anthropic_base_url
+            self._anthropic = anthropic.AsyncAnthropic(**client_kwargs)
+            self._groq = None
+            log.info("llm_provider", provider="anthropic", model=settings.claude_model)
 
     async def _emit(self, event: dict[str, Any]) -> None:
         try:
@@ -103,6 +169,96 @@ class ForensIQAgent:
                 await result
         except Exception as exc:
             log.warning("broadcast_failed", error=str(exc))
+
+    # --- Provider-specific LLM calls ---
+
+    async def _call_anthropic(self, messages: list[dict]) -> tuple[NormalizedResponse, list]:
+        """Call Anthropic, return normalized response + raw content for history."""
+        response = await self._anthropic.messages.create(  # type: ignore[union-attr]
+            model=settings.claude_model,
+            max_tokens=settings.max_tokens,
+            system=SYSTEM_PROMPT,
+            tools=self._anthropic_tool_defs,
+            messages=messages,
+        )
+
+        tool_calls = [
+            NormalizedToolCall(id=block.id, name=block.name, input=block.input)
+            for block in response.content
+            if block.type == "tool_use"
+        ]
+        stop_early = response.stop_reason == "end_turn" and not tool_calls
+        return NormalizedResponse(tool_calls=tool_calls, stop_early=stop_early), response.content
+
+    async def _call_groq(self, messages: list[dict]) -> tuple[NormalizedResponse, Any]:
+        """Call Groq, return normalized response + raw message for history."""
+        response = await self._groq.chat.completions.create(  # type: ignore[union-attr]
+            model=settings.groq_model,
+            max_tokens=settings.max_tokens,
+            messages=[{"role": "system", "content": SYSTEM_PROMPT}] + messages,
+            tools=self._openai_tool_defs,
+            tool_choice="auto",
+        )
+
+        choice = response.choices[0]
+        raw_calls = choice.message.tool_calls or []
+        tool_calls = [
+            NormalizedToolCall(
+                id=tc.id,
+                name=tc.function.name,
+                input=json.loads(tc.function.arguments),
+            )
+            for tc in raw_calls
+        ]
+        stop_early = choice.finish_reason == "stop" and not tool_calls
+        return NormalizedResponse(tool_calls=tool_calls, stop_early=stop_early), choice.message
+
+    async def _call_llm(self, messages: list[dict]) -> tuple[NormalizedResponse, Any]:
+        if settings.llm_provider == "groq":
+            return await self._call_groq(messages)
+        return await self._call_anthropic(messages)
+
+    # --- Message history helpers (format differs per provider) ---
+
+    def _append_assistant(self, messages: list[dict], raw: Any) -> None:
+        if settings.llm_provider == "groq":
+            msg: dict[str, Any] = {"role": "assistant", "content": raw.content}
+            if raw.tool_calls:
+                msg["tool_calls"] = [
+                    {
+                        "id": tc.id,
+                        "type": "function",
+                        "function": {"name": tc.function.name, "arguments": tc.function.arguments},
+                    }
+                    for tc in raw.tool_calls
+                ]
+            messages.append(msg)
+        else:
+            messages.append({"role": "assistant", "content": raw})
+
+    def _append_tool_results(
+        self, messages: list[dict], results: list[tuple[str, str]]
+    ) -> None:
+        """results is a list of (tool_call_id, output) pairs."""
+        if settings.llm_provider == "groq":
+            for call_id, output in results:
+                messages.append({"role": "tool", "tool_call_id": call_id, "content": output})
+        else:
+            messages.append({
+                "role": "user",
+                "content": [
+                    {"type": "tool_result", "tool_use_id": call_id, "content": output}
+                    for call_id, output in results
+                ],
+            })
+
+    def _append_correction_hint(self, messages: list[dict], hint: str) -> None:
+        if settings.llm_provider == "groq":
+            messages.append({"role": "user", "content": hint})
+        else:
+            messages.append({"role": "user", "content": [{"type": "text", "text": hint}]})
+
+    # --- Tool execution ---
 
     _TOOL_NOT_FOUND_MARKERS = (
         "command not found",
@@ -131,7 +287,6 @@ class ForensIQAgent:
             await self._emit({"type": "tool_error", "tool": tool_name, "error": str(exc)})
             return f"Security violation blocked: {exc}"
 
-        # Treat "command not found" style output as a tool error, not a finding.
         if not result.success and self._is_tool_failure(result.output):
             await self._emit({
                 "type": "tool_error",
@@ -160,6 +315,8 @@ class ForensIQAgent:
         log.info("tool_executed", tool=tool_name, duration_ms=result.duration_ms, success=result.success)
         return result.output
 
+    # --- Self-correction ---
+
     def _build_finding_instruction(self, low: list[Finding]) -> str:
         if not low:
             return ""
@@ -171,6 +328,8 @@ class ForensIQAgent:
             f"\n\nSELF-CORRECTION REQUIRED: The following {len(low)} finding(s) have confidence "
             f"below threshold. Run additional tools to corroborate or contradict them:\n{items}"
         )
+
+    # --- Main loop ---
 
     async def investigate(self, case_path: str) -> None:
         messages: list[dict] = [
@@ -189,62 +348,41 @@ class ForensIQAgent:
         finished = False
 
         while not finished:
-            response = await self.client.messages.create(
-                model=settings.claude_model,
-                max_tokens=settings.max_tokens,
-                system=SYSTEM_PROMPT,
-                tools=self._tool_defs,
-                messages=messages,
-            )
+            normalized, raw = await self._call_llm(messages)
 
-            tool_results: list[dict] = []
+            tool_results: list[tuple[str, str]] = []
             new_finding_ids: list[str] = []
 
-            for block in response.content:
-                if block.type == "tool_use":
-                    if block.name == "finish_investigation":
-                        finished = True
-                        output = await self._run_tool(block.name, block.input)
-                        tool_results.append({
-                            "type": "tool_result",
-                            "tool_use_id": block.id,
-                            "content": output,
-                        })
-                        continue
+            for tc in normalized.tool_calls:
+                if tc.name == "finish_investigation":
+                    finished = True
+                    output = await self._run_tool(tc.name, tc.input)
+                    tool_results.append((tc.id, output))
+                    continue
 
-                    output = await self._run_tool(block.name, block.input)
+                output = await self._run_tool(tc.name, tc.input)
 
-                    artifact_ref = (
-                        block.input.get("image_path")
-                        or block.input.get("memory_path")
-                        or block.input.get("hive_path")
-                        or block.input.get("target_path")
-                        or ""
+                artifact_ref = (
+                    tc.input.get("image_path")
+                    or tc.input.get("memory_path")
+                    or tc.input.get("hive_path")
+                    or tc.input.get("target_path")
+                    or ""
+                )
+                match = self.graph.find_matching_finding(output)
+                if match is not None:
+                    finding = self.graph.corroborate(match.id, tool_name=tc.name, raw_output=output)
+                    await self._emit({"type": "finding_updated", "finding": finding.to_dict()})
+                else:
+                    finding = self.graph.add_finding(
+                        description=f"[{tc.name}] {output[:300]}",
+                        tool_name=tc.name,
+                        raw_output=output,
+                        artifact_ref=artifact_ref,
                     )
-                    match = self.graph.find_matching_finding(output)
-                    if match is not None:
-                        finding = self.graph.corroborate(
-                            match.id, tool_name=block.name, raw_output=output
-                        )
-                        await self._emit({
-                            "type": "finding_updated",
-                            "finding": finding.to_dict(),
-                        })
-                    else:
-                        finding = self.graph.add_finding(
-                            description=f"[{block.name}] {output[:300]}",
-                            tool_name=block.name,
-                            raw_output=output,
-                            artifact_ref=artifact_ref,
-                        )
-                        await self._emit({"type": "finding_new", "finding": finding.to_dict()})
-                    new_finding_ids.append(finding.id)
-
-                    tool_results.append({
-                        "type": "tool_result",
-                        "tool_use_id": block.id,
-                        "content": output,
-                    })
+                    await self._emit({"type": "finding_new", "finding": finding.to_dict()})
+                new_finding_ids.append(finding.id)
+                tool_results.append((tc.id, output))
 
             if new_finding_ids:
                 await self._emit({
@@ -255,6 +393,11 @@ class ForensIQAgent:
                 })
 
             low_confidence = self.graph.get_low_confidence_findings(settings.confidence_correction_threshold)
+
+            self._append_assistant(messages, raw)
+
+            if tool_results:
+                self._append_tool_results(messages, tool_results)
 
             if (
                 low_confidence
@@ -271,25 +414,15 @@ class ForensIQAgent:
                     })
 
                 correction_msg = self._build_finding_instruction(low_confidence)
-                tool_results_with_correction = [
-                    *tool_results,
-                    {"type": "text", "text": correction_msg},
-                ] if tool_results else [{"type": "text", "text": correction_msg}]
-
-                messages.append({"role": "assistant", "content": response.content})
-                messages.append({"role": "user", "content": tool_results_with_correction})
+                self._append_correction_hint(messages, correction_msg)
 
                 await self._emit({
                     "type": "iteration_complete",
                     "iteration": correction_iteration,
                     "low_confidence_count": len(low_confidence),
                 })
-            else:
-                if tool_results:
-                    messages.append({"role": "assistant", "content": response.content})
-                    messages.append({"role": "user", "content": tool_results})
 
-            if response.stop_reason == "end_turn" and not tool_results:
+            if normalized.stop_early:
                 finished = True
 
         summary = self.graph.summary()
