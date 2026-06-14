@@ -197,15 +197,25 @@ class ForensIQAgent:
                         or block.input.get("target_path")
                         or ""
                     )
-                    finding = self.graph.add_finding(
-                        description=f"[{block.name}] {output[:300]}",
-                        tool_name=block.name,
-                        raw_output=output,
-                        artifact_ref=artifact_ref,
-                    )
+                    match = self.graph.find_matching_finding(output)
+                    if match is not None:
+                        finding = self.graph.corroborate(
+                            match.id, tool_name=block.name, raw_output=output
+                        )
+                        await self._emit({
+                            "type": "finding_corroborated",
+                            "finding": finding.to_dict(),
+                            "by_tool": block.name,
+                        })
+                    else:
+                        finding = self.graph.add_finding(
+                            description=f"[{block.name}] {output[:300]}",
+                            tool_name=block.name,
+                            raw_output=output,
+                            artifact_ref=artifact_ref,
+                        )
+                        await self._emit({"type": "finding_new", "finding": finding.to_dict()})
                     new_finding_ids.append(finding.id)
-
-                    await self._emit({"type": "finding_new", "finding": finding.to_dict()})
 
                     tool_results.append({
                         "type": "tool_result",
