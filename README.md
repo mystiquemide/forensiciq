@@ -64,7 +64,7 @@ flowchart TB
 
     subgraph Backend["FastAPI Backend — Python 3.11"]
         F[REST + WebSocket API]
-        G[ForensIQ Agent · Claude claude-sonnet-4-6]
+        G[ForensIQ Agent · Pluggable LLM Backend]
         H[EvidenceGraph · Confidence Engine]
         I[Corroboration Engine · Artifact Matching]
         J[Checkpoint Recovery · Disk Persistence]
@@ -161,7 +161,9 @@ This is the fastest path to verifying the interface before committing to a full 
 | `FORENSICIQ_HOST` | No | Backend bind host, default `0.0.0.0` |
 | `FORENSICIQ_PORT` | No | Backend port, default `8000` |
 | `CORS_ORIGINS` | No | Comma-separated allowed frontend origins |
-| `CLAUDE_MODEL` | No | Claude model ID, default `claude-sonnet-4-6` |
+| `LLM_PROVIDER` | No | `anthropic` or `groq`, default `anthropic` |
+| `CLAUDE_MODEL` | No | Anthropic model ID, default `claude-sonnet-4-6` |
+| `GROQ_MODEL` | No | Groq model ID, default `llama-3.3-70b-versatile` |
 | `MAX_TOKENS` | No | Max tokens per agent call, default `8192` |
 | `MAX_CORRECTION_ITERATIONS` | No | Self-correction passes, default `3` |
 | `NEXT_PUBLIC_API_URL` | No | Backend URL for frontend, default `http://localhost:8000` |

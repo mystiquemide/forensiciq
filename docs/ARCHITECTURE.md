@@ -21,7 +21,7 @@ flowchart TB
 
     subgraph Backend["FastAPI Backend — Python 3.11"]
         RT[REST + WebSocket API]
-        AG[ForensIQ Agent · Claude claude-sonnet-4-6]
+        AG[ForensIQ Agent · Pluggable LLM Backend]
         EGE[EvidenceGraph · Confidence Scoring]
         CE[Corroboration Engine · Artifact Matching]
         CP[Checkpoint Recovery]
