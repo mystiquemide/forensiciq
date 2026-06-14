@@ -1,6 +1,13 @@
 {
   "events": [
     {
+      "type": "token_usage",
+      "iteration_input_tokens": 2277,
+      "iteration_output_tokens": 110,
+      "cumulative_input_tokens": 2277,
+      "cumulative_output_tokens": 110
+    },
+    {
       "type": "tool_start",
       "tool": "timeline_generate",
       "params": {
@@ -10,14 +17,14 @@
     {
       "type": "tool_complete",
       "tool": "timeline_generate",
-      "duration_ms": 196,
+      "duration_ms": 216,
       "output_hash": "b338238a0c277541a1b4a661118e08acf404273e64c6b5897b21ee3521e9c43c",
       "success": false
     },
     {
       "type": "finding_new",
       "finding": {
-        "id": "0acca132-2bed-456f-aceb-e141106afbd4",
+        "id": "6228121e-92ae-413c-85d2-2a456964ad87",
         "description": "[timeline_generate] [EXTRACT]\nbash: line 1: log2timeline.py: command not found\n\n[EXPORT SAMPLE]\nbash: line 1: psort.py: command not found\nhead: cannot open '/tmp/forensiciq_timeline.csv' for reading: No such file or directory",
         "confidence": 0.5,
         "label": "INFERENCE",
@@ -25,8 +32,8 @@
           "timeline_generate"
         ],
         "contradictions": [],
-        "evidence_hash": "02ec329e4d2c87c8953c0a9a6eaa0f92b2b74eedbfa6d8bfa1c10989f9397304",
-        "timestamp": "2026-06-14T08:55:34.036772+00:00",
+        "evidence_hash": "4de6978e4e217136dd075a82e158dd57f469533e38df12fdd59d27bbbad0a10c",
+        "timestamp": "2026-06-14T13:23:39.531752+00:00",
         "artifact_ref": "/workspaces/forensiciq/cases/sample/memory.txt",
         "artifacts": [
           "path:/tmp/forensiciq_timeline.csv"
@@ -37,13 +44,13 @@
       "type": "tool_complete",
       "tool": "batch",
       "finding_ids": [
-        "0acca132-2bed-456f-aceb-e141106afbd4"
+        "6228121e-92ae-413c-85d2-2a456964ad87"
       ],
       "duration_ms": 0
     },
     {
       "type": "self_correction",
-      "finding_id": "0acca132-2bed-456f-aceb-e141106afbd4",
+      "finding_id": "6228121e-92ae-413c-85d2-2a456964ad87",
       "reason": "Confidence 50% below 70% threshold",
       "current_sources": [
         "timeline_generate"
@@ -55,6 +62,13 @@
       "low_confidence_count": 1
     },
     {
+      "type": "token_usage",
+      "iteration_input_tokens": 2597,
+      "iteration_output_tokens": 98,
+      "cumulative_input_tokens": 4874,
+      "cumulative_output_tokens": 208
+    },
+    {
       "type": "tool_start",
       "tool": "file_identify",
       "params": {
@@ -64,14 +78,14 @@
     {
       "type": "tool_complete",
       "tool": "file_identify",
-      "duration_ms": 192,
+      "duration_ms": 506,
       "output_hash": "fdf3a8160c567e693f153a950d9ea0dcdfb8323394cce71d2c143f9814fd4260",
       "success": true
     },
     {
       "type": "finding_new",
       "finding": {
-        "id": "4477b7db-f129-49b9-a940-4b3c06fcca7d",
+        "id": "550df5f5-be51-4474-96f3-8efe07e1fd4d",
         "description": "[file_identify] [file]\n/workspaces/forensiciq/cases/sample/memory.txt: ASCII text\n\n[exiftool]\nbash: line 1: exiftool: command not found",
         "confidence": 0.5,
         "label": "INFERENCE",
@@ -80,8 +94,8 @@
           "hash_compute"
         ],
         "contradictions": [],
-        "evidence_hash": "4182af0e38919d435e2f997661fa3a56ba686b272f52141812a1115902bea0dc",
-        "timestamp": "2026-06-14T08:55:36.228143+00:00",
+        "evidence_hash": "b29c142d216364bdb870a2d1a6a74111557565d7b4a3ee4221e1bda7bc37d55e",
+        "timestamp": "2026-06-14T13:23:42.467957+00:00",
         "artifact_ref": "/workspaces/forensiciq/cases/sample/memory.txt",
         "artifacts": [
           "path:/workspaces/forensiciq/cases/sample/memory.txt"
@@ -92,13 +106,13 @@
       "type": "tool_complete",
       "tool": "batch",
       "finding_ids": [
-        "4477b7db-f129-49b9-a940-4b3c06fcca7d"
+        "550df5f5-be51-4474-96f3-8efe07e1fd4d"
       ],
       "duration_ms": 0
     },
     {
       "type": "self_correction",
-      "finding_id": "0acca132-2bed-456f-aceb-e141106afbd4",
+      "finding_id": "6228121e-92ae-413c-85d2-2a456964ad87",
       "reason": "Confidence 50% below 70% threshold",
       "current_sources": [
         "timeline_generate"
@@ -106,7 +120,7 @@
     },
     {
       "type": "self_correction",
-      "finding_id": "4477b7db-f129-49b9-a940-4b3c06fcca7d",
+      "finding_id": "550df5f5-be51-4474-96f3-8efe07e1fd4d",
       "reason": "Confidence 50% below 70% threshold",
       "current_sources": [
         "file_identify",
@@ -119,42 +133,11 @@
       "low_confidence_count": 2
     },
     {
-      "type": "tool_start",
-      "tool": "hash_compute",
-      "params": {
-        "target_path": "/workspaces/forensiciq/cases/sample/memory.txt"
-      }
-    },
-    {
-      "type": "tool_complete",
-      "tool": "hash_compute",
-      "duration_ms": 99,
-      "output_hash": "d7a887861cd08fed286752cffaaf540ccfccc0a732dd7f16072baab737a4bdb5",
-      "success": true
-    },
-    {
-      "type": "finding_corroborated",
-      "finding": {
-        "id": "4477b7db-f129-49b9-a940-4b3c06fcca7d",
-        "description": "[file_identify] [file]\n/workspaces/forensiciq/cases/sample/memory.txt: ASCII text\n\n[exiftool]\nbash: line 1: exiftool: command not found",
-        "confidence": 0.7,
-        "label": "INFERENCE",
-        "sources": [
-          "file_identify",
-          "hash_compute"
-        ],
-        "contradictions": [],
-        "evidence_hash": "4182af0e38919d435e2f997661fa3a56ba686b272f52141812a1115902bea0dc",
-        "timestamp": "2026-06-14T08:55:36.228143+00:00",
-        "artifact_ref": "/workspaces/forensiciq/cases/sample/memory.txt",
-        "artifacts": [
-          "hash:2f86c0632b80c87a12c5f336c0fafb8b",
-          "hash:8a040a28f18a93011df0a01db2244a441d15ed814cdae0f874c0049f07711026",
-          "hash:90e10c7b5942926f53056f7ed3b72b5cf7f09360",
-          "path:/workspaces/forensiciq/cases/sample/memory.txt"
-        ]
-      },
-      "by_tool": "hash_compute"
+      "type": "token_usage",
+      "iteration_input_tokens": 2952,
+      "iteration_output_tokens": 172,
+      "cumulative_input_tokens": 7826,
+      "cumulative_output_tokens": 380
     },
     {
       "type": "tool_start",
@@ -167,14 +150,14 @@
     {
       "type": "tool_complete",
       "tool": "string_extract",
-      "duration_ms": 112,
+      "duration_ms": 135,
       "output_hash": "1aa38d1a1bd9c6d948380ed3b78801d69366bcff01ce16789569f2871e29e3f2",
       "success": true
     },
     {
       "type": "finding_new",
       "finding": {
-        "id": "e543ca62-5006-49e7-9de9-b34729469d45",
+        "id": "2bd31133-16dc-4087-878e-db0215c32328",
         "description": "[string_extract] PID 1432 svchost.exe C:\\Windows\\temp\\evil.exe\nNetwork connection 192.168.1.100:4444 ESTABLISHED\nmalfind: RWX region PID 1432 injected shellcode\nRegistry HKLM\\Software\\Microsoft\\Windows\\CurrentVersion\\Run set to evil.exe\nstrings: C2 beacon 192.168.1.100 hardcoded in evil.exe\nsha256: e3b0c44298fc1c149",
         "confidence": 0.5,
         "label": "INFERENCE",
@@ -182,8 +165,8 @@
           "string_extract"
         ],
         "contradictions": [],
-        "evidence_hash": "ca1842d6c2d1083f4bd4695872b23f62bdcb290483d3c4d36a56816a760bb8e3",
-        "timestamp": "2026-06-14T08:55:41.069296+00:00",
+        "evidence_hash": "a64e6d41561e25181b061ebc7ba13fba4e6f750bdce2c592b74a978e9985745c",
+        "timestamp": "2026-06-14T13:23:46.689234+00:00",
         "artifact_ref": "/workspaces/forensiciq/cases/sample/memory.txt",
         "artifacts": [
           "exe:evil.exe",
@@ -197,17 +180,55 @@
       }
     },
     {
+      "type": "tool_start",
+      "tool": "hash_compute",
+      "params": {
+        "target_path": "/workspaces/forensiciq/cases/sample/memory.txt"
+      }
+    },
+    {
+      "type": "tool_complete",
+      "tool": "hash_compute",
+      "duration_ms": 101,
+      "output_hash": "d7a887861cd08fed286752cffaaf540ccfccc0a732dd7f16072baab737a4bdb5",
+      "success": true
+    },
+    {
+      "type": "finding_corroborated",
+      "finding": {
+        "id": "550df5f5-be51-4474-96f3-8efe07e1fd4d",
+        "description": "[file_identify] [file]\n/workspaces/forensiciq/cases/sample/memory.txt: ASCII text\n\n[exiftool]\nbash: line 1: exiftool: command not found",
+        "confidence": 0.7,
+        "label": "INFERENCE",
+        "sources": [
+          "file_identify",
+          "hash_compute"
+        ],
+        "contradictions": [],
+        "evidence_hash": "b29c142d216364bdb870a2d1a6a74111557565d7b4a3ee4221e1bda7bc37d55e",
+        "timestamp": "2026-06-14T13:23:42.467957+00:00",
+        "artifact_ref": "/workspaces/forensiciq/cases/sample/memory.txt",
+        "artifacts": [
+          "hash:2f86c0632b80c87a12c5f336c0fafb8b",
+          "hash:8a040a28f18a93011df0a01db2244a441d15ed814cdae0f874c0049f07711026",
+          "hash:90e10c7b5942926f53056f7ed3b72b5cf7f09360",
+          "path:/workspaces/forensiciq/cases/sample/memory.txt"
+        ]
+      },
+      "by_tool": "hash_compute"
+    },
+    {
       "type": "tool_complete",
       "tool": "batch",
       "finding_ids": [
-        "4477b7db-f129-49b9-a940-4b3c06fcca7d",
-        "e543ca62-5006-49e7-9de9-b34729469d45"
+        "2bd31133-16dc-4087-878e-db0215c32328",
+        "550df5f5-be51-4474-96f3-8efe07e1fd4d"
       ],
       "duration_ms": 0
     },
     {
       "type": "self_correction",
-      "finding_id": "0acca132-2bed-456f-aceb-e141106afbd4",
+      "finding_id": "6228121e-92ae-413c-85d2-2a456964ad87",
       "reason": "Confidence 50% below 70% threshold",
       "current_sources": [
         "timeline_generate"
@@ -215,7 +236,7 @@
     },
     {
       "type": "self_correction",
-      "finding_id": "e543ca62-5006-49e7-9de9-b34729469d45",
+      "finding_id": "2bd31133-16dc-4087-878e-db0215c32328",
       "reason": "Confidence 50% below 70% threshold",
       "current_sources": [
         "string_extract"
@@ -227,6 +248,13 @@
       "low_confidence_count": 2
     },
     {
+      "type": "token_usage",
+      "iteration_input_tokens": 3752,
+      "iteration_output_tokens": 304,
+      "cumulative_input_tokens": 11578,
+      "cumulative_output_tokens": 684
+    },
+    {
       "type": "tool_start",
       "tool": "malware_scan",
       "params": {
@@ -236,14 +264,14 @@
     {
       "type": "tool_complete",
       "tool": "malware_scan",
-      "duration_ms": 102,
+      "duration_ms": 258,
       "output_hash": "ed7110e12685b24653ff7204db8ef789914b0e06e95ce8d95f243845355717f7",
       "success": true
     },
     {
       "type": "finding_new",
       "finding": {
-        "id": "4630b1ca-3c72-409c-a1ad-27794739d57a",
+        "id": "6cdaaf6e-433f-49b7-be6f-912117139651",
         "description": "[malware_scan] error: could not open file: /opt/yara-rules/",
         "confidence": 0.5,
         "label": "INFERENCE",
@@ -251,8 +279,8 @@
           "malware_scan"
         ],
         "contradictions": [],
-        "evidence_hash": "76113b45b26fcaf5f1b746923117ed5d2468b89630d3f1e28fe622dc5c3d887b",
-        "timestamp": "2026-06-14T08:55:46.797353+00:00",
+        "evidence_hash": "30a351b4b023f5cfcf38a1d4422495d6706bf4c03a467469d29849ba7fdde0d3",
+        "timestamp": "2026-06-14T13:23:51.814501+00:00",
         "artifact_ref": "/workspaces/forensiciq/cases/sample/memory.txt",
         "artifacts": [
           "path:/opt/yara-rules"
@@ -271,14 +299,14 @@
     {
       "type": "tool_complete",
       "tool": "string_extract",
-      "duration_ms": 103,
+      "duration_ms": 96,
       "output_hash": "8f96d01ad41e537064d36b03d9e9e3ca7d9c157c63f2095a688472536e85615b",
       "success": true
     },
     {
       "type": "finding_corroborated",
       "finding": {
-        "id": "e543ca62-5006-49e7-9de9-b34729469d45",
+        "id": "2bd31133-16dc-4087-878e-db0215c32328",
         "description": "[string_extract] PID 1432 svchost.exe C:\\Windows\\temp\\evil.exe\nNetwork connection 192.168.1.100:4444 ESTABLISHED\nmalfind: RWX region PID 1432 injected shellcode\nRegistry HKLM\\Software\\Microsoft\\Windows\\CurrentVersion\\Run set to evil.exe\nstrings: C2 beacon 192.168.1.100 hardcoded in evil.exe\nsha256: e3b0c44298fc1c149",
         "confidence": 0.5,
         "label": "INFERENCE",
@@ -286,8 +314,8 @@
           "string_extract"
         ],
         "contradictions": [],
-        "evidence_hash": "ca1842d6c2d1083f4bd4695872b23f62bdcb290483d3c4d36a56816a760bb8e3",
-        "timestamp": "2026-06-14T08:55:41.069296+00:00",
+        "evidence_hash": "a64e6d41561e25181b061ebc7ba13fba4e6f750bdce2c592b74a978e9985745c",
+        "timestamp": "2026-06-14T13:23:46.689234+00:00",
         "artifact_ref": "/workspaces/forensiciq/cases/sample/memory.txt",
         "artifacts": [
           "exe:evil.exe",
@@ -307,20 +335,20 @@
       "params": {
         "target_path": "/workspaces/forensiciq/cases/sample/memory.txt",
         "min_length": 4,
-        "grep_pattern": ".exe"
+        "grep_pattern": "evil.exe"
       }
     },
     {
       "type": "tool_complete",
       "tool": "string_extract",
-      "duration_ms": 100,
+      "duration_ms": 99,
       "output_hash": "3297a8f757b3beb7acc714d41d80f460c5d58a15ac6b9c092e0e095d2fcdf02d",
       "success": true
     },
     {
       "type": "finding_corroborated",
       "finding": {
-        "id": "e543ca62-5006-49e7-9de9-b34729469d45",
+        "id": "2bd31133-16dc-4087-878e-db0215c32328",
         "description": "[string_extract] PID 1432 svchost.exe C:\\Windows\\temp\\evil.exe\nNetwork connection 192.168.1.100:4444 ESTABLISHED\nmalfind: RWX region PID 1432 injected shellcode\nRegistry HKLM\\Software\\Microsoft\\Windows\\CurrentVersion\\Run set to evil.exe\nstrings: C2 beacon 192.168.1.100 hardcoded in evil.exe\nsha256: e3b0c44298fc1c149",
         "confidence": 0.5,
         "label": "INFERENCE",
@@ -328,50 +356,8 @@
           "string_extract"
         ],
         "contradictions": [],
-        "evidence_hash": "ca1842d6c2d1083f4bd4695872b23f62bdcb290483d3c4d36a56816a760bb8e3",
-        "timestamp": "2026-06-14T08:55:41.069296+00:00",
-        "artifact_ref": "/workspaces/forensiciq/cases/sample/memory.txt",
-        "artifacts": [
-          "exe:evil.exe",
-          "exe:svchost.exe",
-          "hash:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-          "ip:192.168.1.100",
-          "path:c:\\windows\\temp\\evil.exe",
-          "pid:1432",
-          "reg:hklm\\software\\microsoft\\windows\\currentversion\\run"
-        ]
-      },
-      "by_tool": "string_extract"
-    },
-    {
-      "type": "tool_start",
-      "tool": "string_extract",
-      "params": {
-        "target_path": "/workspaces/forensiciq/cases/sample/memory.txt",
-        "min_length": 4,
-        "grep_pattern": "PID"
-      }
-    },
-    {
-      "type": "tool_complete",
-      "tool": "string_extract",
-      "duration_ms": 109,
-      "output_hash": "a2d2646cdd1e749ae6259dbd5e030b320821c7398ddc2d71c9176ec5d30e8845",
-      "success": true
-    },
-    {
-      "type": "finding_corroborated",
-      "finding": {
-        "id": "e543ca62-5006-49e7-9de9-b34729469d45",
-        "description": "[string_extract] PID 1432 svchost.exe C:\\Windows\\temp\\evil.exe\nNetwork connection 192.168.1.100:4444 ESTABLISHED\nmalfind: RWX region PID 1432 injected shellcode\nRegistry HKLM\\Software\\Microsoft\\Windows\\CurrentVersion\\Run set to evil.exe\nstrings: C2 beacon 192.168.1.100 hardcoded in evil.exe\nsha256: e3b0c44298fc1c149",
-        "confidence": 0.5,
-        "label": "INFERENCE",
-        "sources": [
-          "string_extract"
-        ],
-        "contradictions": [],
-        "evidence_hash": "ca1842d6c2d1083f4bd4695872b23f62bdcb290483d3c4d36a56816a760bb8e3",
-        "timestamp": "2026-06-14T08:55:41.069296+00:00",
+        "evidence_hash": "a64e6d41561e25181b061ebc7ba13fba4e6f750bdce2c592b74a978e9985745c",
+        "timestamp": "2026-06-14T13:23:46.689234+00:00",
         "artifact_ref": "/workspaces/forensiciq/cases/sample/memory.txt",
         "artifacts": [
           "exe:evil.exe",
@@ -389,12 +375,18 @@
       "type": "tool_complete",
       "tool": "batch",
       "finding_ids": [
-        "4630b1ca-3c72-409c-a1ad-27794739d57a",
-        "e543ca62-5006-49e7-9de9-b34729469d45",
-        "e543ca62-5006-49e7-9de9-b34729469d45",
-        "e543ca62-5006-49e7-9de9-b34729469d45"
+        "6cdaaf6e-433f-49b7-be6f-912117139651",
+        "2bd31133-16dc-4087-878e-db0215c32328",
+        "2bd31133-16dc-4087-878e-db0215c32328"
       ],
       "duration_ms": 0
+    },
+    {
+      "type": "token_usage",
+      "iteration_input_tokens": 4264,
+      "iteration_output_tokens": 2,
+      "cumulative_input_tokens": 15842,
+      "cumulative_output_tokens": 686
     },
     {
       "type": "investigation_complete",
@@ -408,7 +400,7 @@
   "graph": {
     "findings": [
       {
-        "id": "0acca132-2bed-456f-aceb-e141106afbd4",
+        "id": "6228121e-92ae-413c-85d2-2a456964ad87",
         "description": "[timeline_generate] [EXTRACT]\nbash: line 1: log2timeline.py: command not found\n\n[EXPORT SAMPLE]\nbash: line 1: psort.py: command not found\nhead: cannot open '/tmp/forensiciq_timeline.csv' for reading: No such file or directory",
         "confidence": 0.5,
         "label": "INFERENCE",
@@ -416,15 +408,15 @@
           "timeline_generate"
         ],
         "contradictions": [],
-        "evidence_hash": "02ec329e4d2c87c8953c0a9a6eaa0f92b2b74eedbfa6d8bfa1c10989f9397304",
-        "timestamp": "2026-06-14T08:55:34.036772+00:00",
+        "evidence_hash": "4de6978e4e217136dd075a82e158dd57f469533e38df12fdd59d27bbbad0a10c",
+        "timestamp": "2026-06-14T13:23:39.531752+00:00",
         "artifact_ref": "/workspaces/forensiciq/cases/sample/memory.txt",
         "artifacts": [
           "path:/tmp/forensiciq_timeline.csv"
         ]
       },
       {
-        "id": "4477b7db-f129-49b9-a940-4b3c06fcca7d",
+        "id": "550df5f5-be51-4474-96f3-8efe07e1fd4d",
         "description": "[file_identify] [file]\n/workspaces/forensiciq/cases/sample/memory.txt: ASCII text\n\n[exiftool]\nbash: line 1: exiftool: command not found",
         "confidence": 0.7,
         "label": "INFERENCE",
@@ -433,8 +425,8 @@
           "hash_compute"
         ],
         "contradictions": [],
-        "evidence_hash": "4182af0e38919d435e2f997661fa3a56ba686b272f52141812a1115902bea0dc",
-        "timestamp": "2026-06-14T08:55:36.228143+00:00",
+        "evidence_hash": "b29c142d216364bdb870a2d1a6a74111557565d7b4a3ee4221e1bda7bc37d55e",
+        "timestamp": "2026-06-14T13:23:42.467957+00:00",
         "artifact_ref": "/workspaces/forensiciq/cases/sample/memory.txt",
         "artifacts": [
           "hash:2f86c0632b80c87a12c5f336c0fafb8b",
@@ -444,7 +436,7 @@
         ]
       },
       {
-        "id": "e543ca62-5006-49e7-9de9-b34729469d45",
+        "id": "2bd31133-16dc-4087-878e-db0215c32328",
         "description": "[string_extract] PID 1432 svchost.exe C:\\Windows\\temp\\evil.exe\nNetwork connection 192.168.1.100:4444 ESTABLISHED\nmalfind: RWX region PID 1432 injected shellcode\nRegistry HKLM\\Software\\Microsoft\\Windows\\CurrentVersion\\Run set to evil.exe\nstrings: C2 beacon 192.168.1.100 hardcoded in evil.exe\nsha256: e3b0c44298fc1c149",
         "confidence": 0.5,
         "label": "INFERENCE",
@@ -452,8 +444,8 @@
           "string_extract"
         ],
         "contradictions": [],
-        "evidence_hash": "ca1842d6c2d1083f4bd4695872b23f62bdcb290483d3c4d36a56816a760bb8e3",
-        "timestamp": "2026-06-14T08:55:41.069296+00:00",
+        "evidence_hash": "a64e6d41561e25181b061ebc7ba13fba4e6f750bdce2c592b74a978e9985745c",
+        "timestamp": "2026-06-14T13:23:46.689234+00:00",
         "artifact_ref": "/workspaces/forensiciq/cases/sample/memory.txt",
         "artifacts": [
           "exe:evil.exe",
@@ -466,7 +458,7 @@
         ]
       },
       {
-        "id": "4630b1ca-3c72-409c-a1ad-27794739d57a",
+        "id": "6cdaaf6e-433f-49b7-be6f-912117139651",
         "description": "[malware_scan] error: could not open file: /opt/yara-rules/",
         "confidence": 0.5,
         "label": "INFERENCE",
@@ -474,8 +466,8 @@
           "malware_scan"
         ],
         "contradictions": [],
-        "evidence_hash": "76113b45b26fcaf5f1b746923117ed5d2468b89630d3f1e28fe622dc5c3d887b",
-        "timestamp": "2026-06-14T08:55:46.797353+00:00",
+        "evidence_hash": "30a351b4b023f5cfcf38a1d4422495d6706bf4c03a467469d29849ba7fdde0d3",
+        "timestamp": "2026-06-14T13:23:51.814501+00:00",
         "artifact_ref": "/workspaces/forensiciq/cases/sample/memory.txt",
         "artifacts": [
           "path:/opt/yara-rules"
@@ -489,8 +481,8 @@
           "image_path": "/workspaces/forensiciq/cases/sample/memory.txt"
         },
         "output_hash": "b338238a0c277541a1b4a661118e08acf404273e64c6b5897b21ee3521e9c43c",
-        "timestamp": "2026-06-14T08:55:34.035329+00:00",
-        "duration_ms": 196,
+        "timestamp": "2026-06-14T13:23:39.531275+00:00",
+        "duration_ms": 216,
         "success": false
       },
       {
@@ -499,18 +491,8 @@
           "target_path": "/workspaces/forensiciq/cases/sample/memory.txt"
         },
         "output_hash": "fdf3a8160c567e693f153a950d9ea0dcdfb8323394cce71d2c143f9814fd4260",
-        "timestamp": "2026-06-14T08:55:36.227803+00:00",
-        "duration_ms": 192,
-        "success": true
-      },
-      {
-        "tool_name": "hash_compute",
-        "params": {
-          "target_path": "/workspaces/forensiciq/cases/sample/memory.txt"
-        },
-        "output_hash": "d7a887861cd08fed286752cffaaf540ccfccc0a732dd7f16072baab737a4bdb5",
-        "timestamp": "2026-06-14T08:55:40.955638+00:00",
-        "duration_ms": 99,
+        "timestamp": "2026-06-14T13:23:42.467590+00:00",
+        "duration_ms": 506,
         "success": true
       },
       {
@@ -520,8 +502,18 @@
           "min_length": 4
         },
         "output_hash": "1aa38d1a1bd9c6d948380ed3b78801d69366bcff01ce16789569f2871e29e3f2",
-        "timestamp": "2026-06-14T08:55:41.068814+00:00",
-        "duration_ms": 112,
+        "timestamp": "2026-06-14T13:23:46.688843+00:00",
+        "duration_ms": 135,
+        "success": true
+      },
+      {
+        "tool_name": "hash_compute",
+        "params": {
+          "target_path": "/workspaces/forensiciq/cases/sample/memory.txt"
+        },
+        "output_hash": "d7a887861cd08fed286752cffaaf540ccfccc0a732dd7f16072baab737a4bdb5",
+        "timestamp": "2026-06-14T13:23:46.790535+00:00",
+        "duration_ms": 101,
         "success": true
       },
       {
@@ -530,8 +522,8 @@
           "target_path": "/workspaces/forensiciq/cases/sample/memory.txt"
         },
         "output_hash": "ed7110e12685b24653ff7204db8ef789914b0e06e95ce8d95f243845355717f7",
-        "timestamp": "2026-06-14T08:55:46.797083+00:00",
-        "duration_ms": 102,
+        "timestamp": "2026-06-14T13:23:51.814213+00:00",
+        "duration_ms": 258,
         "success": true
       },
       {
@@ -542,8 +534,8 @@
           "grep_pattern": "192.168"
         },
         "output_hash": "8f96d01ad41e537064d36b03d9e9e3ca7d9c157c63f2095a688472536e85615b",
-        "timestamp": "2026-06-14T08:55:46.900681+00:00",
-        "duration_ms": 103,
+        "timestamp": "2026-06-14T13:23:51.911348+00:00",
+        "duration_ms": 96,
         "success": true
       },
       {
@@ -551,23 +543,11 @@
         "params": {
           "target_path": "/workspaces/forensiciq/cases/sample/memory.txt",
           "min_length": 4,
-          "grep_pattern": ".exe"
+          "grep_pattern": "evil.exe"
         },
         "output_hash": "3297a8f757b3beb7acc714d41d80f460c5d58a15ac6b9c092e0e095d2fcdf02d",
-        "timestamp": "2026-06-14T08:55:47.003255+00:00",
-        "duration_ms": 100,
-        "success": true
-      },
-      {
-        "tool_name": "string_extract",
-        "params": {
-          "target_path": "/workspaces/forensiciq/cases/sample/memory.txt",
-          "min_length": 4,
-          "grep_pattern": "PID"
-        },
-        "output_hash": "a2d2646cdd1e749ae6259dbd5e030b320821c7398ddc2d71c9176ec5d30e8845",
-        "timestamp": "2026-06-14T08:55:47.116477+00:00",
-        "duration_ms": 109,
+        "timestamp": "2026-06-14T13:23:52.010996+00:00",
+        "duration_ms": 99,
         "success": true
       }
     ],

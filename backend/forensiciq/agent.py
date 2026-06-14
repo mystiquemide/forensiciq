@@ -166,6 +166,8 @@ class ForensIQAgent:
 
         correction_iteration = 0
         finished = False
+        total_input_tokens = 0
+        total_output_tokens = 0
 
         while not finished:
             response = await self.client.messages.create(
@@ -175,6 +177,17 @@ class ForensIQAgent:
                 tools=self._tool_defs,
                 messages=messages,
             )
+            usage = getattr(response, "usage", None)
+            if usage is not None:
+                total_input_tokens += usage.input_tokens
+                total_output_tokens += usage.output_tokens
+                await self._emit({
+                    "type": "token_usage",
+                    "iteration_input_tokens": usage.input_tokens,
+                    "iteration_output_tokens": usage.output_tokens,
+                    "cumulative_input_tokens": total_input_tokens,
+                    "cumulative_output_tokens": total_output_tokens,
+                })
 
             tool_results: list[dict] = []
             new_finding_ids: list[str] = []
