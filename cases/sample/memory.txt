@@ -1,0 +1,6 @@
+PID 1432 svchost.exe C:\Windows\temp\evil.exe
+Network connection 192.168.1.100:4444 ESTABLISHED
+malfind: RWX region PID 1432 injected shellcode
+Registry HKLM\Software\Microsoft\Windows\CurrentVersion\Run set to evil.exe
+strings: C2 beacon 192.168.1.100 hardcoded in evil.exe
+sha256: e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855

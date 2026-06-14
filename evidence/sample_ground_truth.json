@@ -1,0 +1,1 @@
+{"case_name":"sample-case-001","expected_artifacts":["ip:192.168.1.100","exe:evil.exe","pid:1432","hash:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855","reg:hklm\\software\\microsoft\\windows\\currentversion\\run"]}
