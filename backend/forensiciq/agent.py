@@ -104,6 +104,17 @@ class ForensIQAgent:
         except Exception as exc:
             log.warning("broadcast_failed", error=str(exc))
 
+    _TOOL_NOT_FOUND_MARKERS = (
+        "command not found",
+        "no such file or directory",
+        "not installed",
+        "bash: line",
+    )
+
+    def _is_tool_failure(self, output: str) -> bool:
+        low = output.lower()
+        return any(marker in low for marker in self._TOOL_NOT_FOUND_MARKERS)
+
     async def _run_tool(self, tool_name: str, tool_input: dict) -> str:
         if tool_name == "finish_investigation":
             return tool_input.get("summary", "Investigation complete.")
@@ -119,6 +130,16 @@ class ForensIQAgent:
         except ToolSecurityError as exc:
             await self._emit({"type": "tool_error", "tool": tool_name, "error": str(exc)})
             return f"Security violation blocked: {exc}"
+
+        # Treat "command not found" style output as a tool error, not a finding.
+        if not result.success and self._is_tool_failure(result.output):
+            await self._emit({
+                "type": "tool_error",
+                "tool": tool_name,
+                "error": f"Tool not available on SIFT VM: {tool_name}",
+            })
+            log.warning("tool_not_available", tool=tool_name)
+            return f"TOOL_UNAVAILABLE: {tool_name} is not installed on the SIFT VM. Skip this tool and continue with available tools."
 
         self.graph.record_tool_call(
             tool_name=tool_name,

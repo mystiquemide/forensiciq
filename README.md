@@ -135,6 +135,20 @@ npm run dev
 
 Frontend dev server: `http://localhost:3000`
 
+### Try without a SIFT VM
+
+No VM? No problem. ForensIQ ships a simulation panel you can use to explore the full UI without connecting to real forensic infrastructure.
+
+Open any investigation URL in dev mode:
+
+```
+http://localhost:3000/investigation/demo
+```
+
+The simulation panel lets you replay a pre-recorded investigation event stream - findings appear, confidence scores climb, self-correction fires, and the evidence graph builds in real time. All UI paths (report export, checkpoint recovery, evidence graph) work exactly as they do in a live run. The only difference is no SSH connection is made to a SIFT VM.
+
+This is the fastest path to verifying the interface before committing to a full SIFT VM setup.
+
 ## Environment Variables
 
 | Variable | Required | Description |
