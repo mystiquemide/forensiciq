@@ -162,6 +162,33 @@ class EvidenceGraph:
         self.tool_calls.append(record)
         return record
 
+    @classmethod
+    def from_dict(cls, data: dict) -> "EvidenceGraph":
+        graph = cls()
+        for f in data.get("findings", []):
+            graph.findings[f["id"]] = Finding(
+                id=f["id"],
+                description=f["description"],
+                confidence=f["confidence"],
+                sources=f["sources"],
+                contradictions=f["contradictions"],
+                evidence_hash=f["evidence_hash"],
+                timestamp=f["timestamp"],
+                artifact_ref=f.get("artifact_ref", ""),
+                raw_outputs={},
+                artifacts=set(f.get("artifacts", [])),
+            )
+        for t in data.get("tool_calls", []):
+            graph.tool_calls.append(ToolCallRecord(
+                tool_name=t["tool_name"],
+                params=t["params"],
+                output_hash=t["output_hash"],
+                timestamp=t["timestamp"],
+                duration_ms=t["duration_ms"],
+                success=t["success"],
+            ))
+        return graph
+
     def get_low_confidence_findings(self, threshold: float) -> list[Finding]:
         return [f for f in self.findings.values() if f.confidence < threshold]
 

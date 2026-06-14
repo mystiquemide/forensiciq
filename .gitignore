@@ -28,6 +28,9 @@ backend/reports/
 backend/logs/
 *.log
 
+# Checkpoint persistence
+checkpoints/
+
 # OS
 .DS_Store
 Thumbs.db
@@ -56,3 +59,7 @@ htmlcov/
 
 # Playwright temp installs
 node_modules/
+
+# Stray root-level npm artifacts
+/package.json
+/package-lock.json

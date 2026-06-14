@@ -206,9 +206,8 @@ class ForensIQAgent:
                             match.id, tool_name=block.name, raw_output=output
                         )
                         await self._emit({
-                            "type": "finding_corroborated",
+                            "type": "finding_updated",
                             "finding": finding.to_dict(),
-                            "by_tool": block.name,
                         })
                     else:
                         finding = self.graph.add_finding(
