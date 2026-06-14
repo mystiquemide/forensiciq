@@ -3,6 +3,7 @@ from pydantic_settings import BaseSettings
 
 class Settings(BaseSettings):
     anthropic_api_key: str
+    anthropic_base_url: str | None = None
     sift_host: str = "192.168.56.101"
     sift_port: int = 22
     sift_user: str = "sansforensics"

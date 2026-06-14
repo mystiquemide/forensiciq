@@ -76,7 +76,10 @@ class ForensIQAgent:
         self.investigation_id = investigation_id
         self.graph = graph
         self.broadcast = broadcast
-        self.client = anthropic.AsyncAnthropic(api_key=settings.anthropic_api_key)
+        client_kwargs = {"api_key": settings.anthropic_api_key}
+        if settings.anthropic_base_url:
+            client_kwargs["base_url"] = settings.anthropic_base_url
+        self.client = anthropic.AsyncAnthropic(**client_kwargs)
 
         self._tools: dict[str, BaseSIFTTool] = {
             t.name: t
