@@ -1,5 +1,18 @@
 # ForensIQ — Accuracy Report
 
+## Architectural Safety Guarantee
+
+**Evidence integrity is enforced at the tool layer in code, not via prompt instructions.**
+
+`BaseSIFTTool._check_command()` raises `ToolSecurityError` before any SSH connection
+is made if a command matches the destructive blocklist (`rm`, `dd`, `shred`, `mkfs`,
+`fdisk`, `chmod`, `chown`, `truncate`, `>`, `sudo rm`, `wipefs`, and chained variants).
+The agent cannot bypass this by rephrasing instructions, injecting content through case
+data, or using model-level reasoning — the block is architectural.
+
+This distinction matters: prompt-based safety can be overridden by adversarial input.
+Code-level enforcement cannot.
+
 ## Methodology
 
 ForensIQ was evaluated against a controlled case (`sample-case-001`) containing
@@ -38,7 +51,9 @@ Five expected artifacts were planted in the case:
 | Findings produced | 4 |
 | Tool executions | 8 |
 | Corroboration events | 4 |
-| Logged events (full trace) | 37 |
+| LLM calls | 4 |
+| Total tokens consumed | 10,865 (input: 9,536 / output: 1,329) |
+| Logged events (full trace) | 41 |
 
 ## Analysis
 
@@ -81,7 +96,7 @@ read-only by all tools used.
 
 ## Reproducibility
 
-Full execution trace (37 events, 4 findings, 8 tool calls) is preserved in
-`evidence/investigation_log.json`. Ground truth is in
+Full execution trace (41 events, 4 findings, 8 tool calls, 4 LLM calls with per-call
+token counts) is preserved in `evidence/investigation_log.json`. Ground truth is in
 `evidence/sample_ground_truth.json`. Scores are reproducible by running
 `python -m forensiciq.benchmark` against the recorded findings.

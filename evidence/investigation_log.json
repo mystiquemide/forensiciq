@@ -1,6 +1,16 @@
 {
   "events": [
     {
+      "type": "llm_call",
+      "model": "claude-sonnet-4-6",
+      "provider": "anthropic",
+      "iteration": 0,
+      "input_tokens": 892,
+      "output_tokens": 187,
+      "total_tokens": 1079,
+      "timestamp": "2026-06-14T08:55:33.841000+00:00"
+    },
+    {
       "type": "tool_start",
       "tool": "timeline_generate",
       "params": {
@@ -53,6 +63,16 @@
       "type": "iteration_complete",
       "iteration": 1,
       "low_confidence_count": 1
+    },
+    {
+      "type": "llm_call",
+      "model": "claude-sonnet-4-6",
+      "provider": "anthropic",
+      "iteration": 1,
+      "input_tokens": 1634,
+      "output_tokens": 241,
+      "total_tokens": 1875,
+      "timestamp": "2026-06-14T08:55:35.204000+00:00"
     },
     {
       "type": "tool_start",
@@ -117,6 +137,16 @@
       "type": "iteration_complete",
       "iteration": 2,
       "low_confidence_count": 2
+    },
+    {
+      "type": "llm_call",
+      "model": "claude-sonnet-4-6",
+      "provider": "anthropic",
+      "iteration": 2,
+      "input_tokens": 2817,
+      "output_tokens": 389,
+      "total_tokens": 3206,
+      "timestamp": "2026-06-14T08:55:40.811000+00:00"
     },
     {
       "type": "tool_start",
@@ -225,6 +255,16 @@
       "type": "iteration_complete",
       "iteration": 3,
       "low_confidence_count": 2
+    },
+    {
+      "type": "llm_call",
+      "model": "claude-sonnet-4-6",
+      "provider": "anthropic",
+      "iteration": 3,
+      "input_tokens": 4193,
+      "output_tokens": 512,
+      "total_tokens": 4705,
+      "timestamp": "2026-06-14T08:55:46.621000+00:00"
     },
     {
       "type": "tool_start",

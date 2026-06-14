@@ -9,7 +9,8 @@ fires when any finding sits below the confidence threshold.
 
 import json
 from collections.abc import Callable, Awaitable
-from dataclasses import dataclass
+from dataclasses import dataclass, field
+from datetime import datetime, timezone
 from typing import Any
 
 import anthropic
@@ -99,6 +100,8 @@ class NormalizedToolCall:
 class NormalizedResponse:
     tool_calls: list[NormalizedToolCall]
     stop_early: bool  # True when LLM returned end_turn/stop with no tool calls
+    input_tokens: int = 0
+    output_tokens: int = 0
 
 
 def _anthropic_def_to_openai(tool_def: dict) -> dict:
@@ -188,7 +191,12 @@ class ForensIQAgent:
             if block.type == "tool_use"
         ]
         stop_early = response.stop_reason == "end_turn" and not tool_calls
-        return NormalizedResponse(tool_calls=tool_calls, stop_early=stop_early), response.content
+        return NormalizedResponse(
+            tool_calls=tool_calls,
+            stop_early=stop_early,
+            input_tokens=response.usage.input_tokens,
+            output_tokens=response.usage.output_tokens,
+        ), response.content
 
     async def _call_groq(self, messages: list[dict]) -> tuple[NormalizedResponse, Any]:
         """Call Groq, return normalized response + raw message for history."""
@@ -211,7 +219,13 @@ class ForensIQAgent:
             for tc in raw_calls
         ]
         stop_early = choice.finish_reason == "stop" and not tool_calls
-        return NormalizedResponse(tool_calls=tool_calls, stop_early=stop_early), choice.message
+        usage = response.usage
+        return NormalizedResponse(
+            tool_calls=tool_calls,
+            stop_early=stop_early,
+            input_tokens=usage.prompt_tokens if usage else 0,
+            output_tokens=usage.completion_tokens if usage else 0,
+        ), choice.message
 
     async def _call_llm(self, messages: list[dict]) -> tuple[NormalizedResponse, Any]:
         if settings.llm_provider == "groq":
@@ -349,6 +363,18 @@ class ForensIQAgent:
 
         while not finished:
             normalized, raw = await self._call_llm(messages)
+
+            model = settings.groq_model if settings.llm_provider == "groq" else settings.claude_model
+            await self._emit({
+                "type": "llm_call",
+                "model": model,
+                "provider": settings.llm_provider,
+                "iteration": correction_iteration,
+                "input_tokens": normalized.input_tokens,
+                "output_tokens": normalized.output_tokens,
+                "total_tokens": normalized.input_tokens + normalized.output_tokens,
+                "timestamp": datetime.now(timezone.utc).isoformat(),
+            })
 
             tool_results: list[tuple[str, str]] = []
             new_finding_ids: list[str] = []

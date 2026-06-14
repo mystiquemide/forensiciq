@@ -38,10 +38,10 @@ flowchart TB
             T8[hash_compute]
         end
 
-        SB["Security Boundary
-        ToolSecurityError blocks:
-        rm · dd · shred · mkfs
-        chmod · chown · truncate"]
+        SB["⚠ Security Boundary — ARCHITECTURAL, NOT PROMPT-BASED
+        BaseSIFTTool._check_command() raises ToolSecurityError
+        BEFORE any SSH connection. Blocklist in code, not in prompt.
+        rm · dd · shred · mkfs · chmod · chown · truncate · wipefs"]
     end
 
     subgraph SIFT["SIFT Workstation VM — Ubuntu"]
