@@ -105,6 +105,7 @@ export function useInvestigation() {
   const handleEvent = useCallback((event: WSEvent) => {
     switch (event.type) {
       case "tool_start":
+        dispatch({ type: "SET_STATUS", status: "running" });
         dispatch({ type: "TOOL_START", tool: event.tool, note: event.reasoning });
         break;
       case "tool_complete":

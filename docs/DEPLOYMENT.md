@@ -74,6 +74,42 @@ npm run dev
 # http://localhost:3001
 ```
 
+## Railway Deployment (recommended for production)
+
+Railway auto-detects both Node.js and Python from the repo. Two services, one platform, WebSocket support built in.
+
+### Backend service
+
+1. Create a new project on [railway.app](https://railway.app).
+2. Add a service, connect this repo, set the root directory to `backend/`.
+3. Railway picks up the `Dockerfile` automatically.
+4. Set environment variables in the Railway dashboard:
+   - `ANTHROPIC_API_KEY`
+   - `SIFT_HOST`, `SIFT_USER`, `SIFT_SSH_KEY_PATH`
+   - `CORS_ORIGINS` - set to your frontend Railway URL
+5. Copy the generated Railway domain, for example `https://forensiciq-backend.railway.app`.
+
+### Frontend service
+
+1. Add a second service in the same Railway project, root directory `frontend/`.
+2. Set environment variables:
+   - `NEXT_PUBLIC_API_URL` - your backend Railway URL from above
+   - `NEXT_PUBLIC_WS_URL` - same URL with `wss://` instead of `https://`
+3. Railway starts the frontend on port 3000 by default.
+
+### SSH key for SIFT VM on Railway
+
+Railway does not have a filesystem for secrets. Store the SSH private key as an environment variable:
+
+```bash
+# Encode the key
+base64 -w 0 ~/.ssh/sift_id_rsa
+```
+
+Add the base64 string as `SIFT_SSH_KEY_B64` and decode it at startup in a custom entrypoint or via an init script before uvicorn starts.
+
+---
+
 ## Vercel Deployment, frontend only
 
 The `vercel.json` at repo root tells Vercel to use `frontend/` as the root directory.
